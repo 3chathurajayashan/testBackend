@@ -29,13 +29,13 @@ const getAllUsers = async (req, res, next) =>
 
 const addUsers = async (req, res, next) => {
 
- const {name, age, email} = req.body;
+ const {pharmacyName, ownerName, email,password,phone,address,pharmacyLicenseNumber,profileImage,role } = req.body;
 
  let users;
 
  try{
 
-    users = new User ({name, age, email});
+    users = new User ({pharmacyName, ownerName, email,password,phone,address,pharmacyLicenseNumber,profileImage,role });
     await users.save();
  }
  catch(err)
@@ -87,13 +87,13 @@ const getByID = async (req, res, next) => {
 const updateUser = async (req, res, next) =>{
 
     const id= req.params.id;
-    const {name, age, email} = req.body;
+    const {pharmacyName, ownerName, email,password,phone,address,pharmacyLicenseNumber,profileImage,role } = req.body;
 
     let users;
 
     try
     {
-        users = await User.findByIdAndUpdate(id,{ name:name, age:age, email:email});
+        users = await User.findByIdAndUpdate(id,{ pharmacyName:pharmacyName, ownerName:ownerName, email:email,password:password,phone:phone,address:address,pharmacyLicenseNumber:pharmacyLicenseNumber,profileImage:profileImage,role:role});
         users = await users.save();
     }
     catch(err)
