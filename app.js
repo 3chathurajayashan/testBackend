@@ -25,7 +25,7 @@ app.use("/products", productRouter);
 // MongoDB connection
 mongoose.connect("mongodb+srv://admin:admin@cluster0.afu07sh.mongodb.net/")
   .then(() => {
-    console.log(" Connected to MongoDBssssssss");
+    console.log(" Connected to MongoDB");
 
     // Start the server
     const server = app.listen(PORT, () => {
