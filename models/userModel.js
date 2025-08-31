@@ -45,15 +45,10 @@ const userSchema = new Schema({
     },
    
     profileImage: {
-      type: String, // Cloudinary URL
+      type: String,  
       default: "",
     },
-    role: {
-      type: String,
-      enum: ["pharmacy", "admin"],
-      default: "pharmacy",
-    },
-    
+  
   },
   { timestamps: true }
 
@@ -61,6 +56,6 @@ const userSchema = new Schema({
 );
 
 module.exports = mongoose.model(
-    "userModel", //filename
-    userSchema //function name
+    "userModel", 
+    userSchema 
 )

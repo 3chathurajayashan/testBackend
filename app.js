@@ -22,6 +22,9 @@ app.use("/users", userRouter);
 const productRouter = require("./routes/ProductRoute");
 app.use("/products", productRouter);
 
+const AdminRouter = require("./routes/AdminRoute");
+app.use("/Admins", AdminRouter);
+
 // MongoDB connection
 mongoose.connect("mongodb+srv://admin:admin@cluster0.afu07sh.mongodb.net/")
   .then(() => {
