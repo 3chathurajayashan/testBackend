@@ -2,6 +2,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const Admin = require("./models/AdminModel");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -47,3 +48,26 @@ mongoose.connect("mongodb+srv://admin:admin@cluster0.afu07sh.mongodb.net/")
   .catch((err) => {
     console.error(" MongoDB connection error:", err);
   });
+
+  //login
+
+  app.post("/login", async (req, res) => {
+  const { gmail, password } = req.body;
+  try {
+    const user = await Admin.findOne({ gmail });
+    if (!user) {
+      return res.json({ status: "error", message: "User not found" });
+    }
+
+    if (user.password === password) {
+      const { password, ...userData } = user._doc; // exclude password
+      return res.json({ status: "ok", user: userData });
+    } else {
+      return res.json({ status: "error", message: "Incorrect password" });
+    }
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: "error", message: "Server error" });
+  }
+});
