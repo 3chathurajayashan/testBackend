@@ -18,6 +18,8 @@ app.get('/', (req, res) => {
 
 // Import routes
 const userRouter = require("./routes/userRoute");
+
+
 app.use("/users", userRouter);
 
 const productRouter = require("./routes/ProductRoute");
@@ -49,7 +51,7 @@ mongoose.connect("mongodb+srv://admin:admin@cluster0.afu07sh.mongodb.net/")
     console.error(" MongoDB connection error:", err);
   });
 
-  //login
+  
 
   app.post("/login", async (req, res) => {
   const { gmail, password } = req.body;
@@ -60,7 +62,7 @@ mongoose.connect("mongodb+srv://admin:admin@cluster0.afu07sh.mongodb.net/")
     }
 
     if (user.password === password) {
-      const { password, ...userData } = user._doc; // exclude password
+      const { password, ...userData } = user._doc;  
       return res.json({ status: "ok", user: userData });
     } else {
       return res.json({ status: "error", message: "Incorrect password" });
