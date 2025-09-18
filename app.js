@@ -11,65 +11,70 @@ const PORT = process.env.PORT || 5001;
 app.use(express.json());
 app.use(cors());
 
-// Test route
-app.get('/', (req, res) => {
-  res.send("Back end is working");
+ 
+app.get("/", (req, res) => {
+  res.send(" Backend is working");
 });
 
-// Import routes
+ 
 const userRouter = require("./routes/userRoute");
-
-
-app.use("/users", userRouter);
-
 const productRouter = require("./routes/ProductRoute");
+const adminRouter = require("./routes/AdminRoute");
+
+ 
+app.use("/users", userRouter);     // includes cart + wishlist routes
 app.use("/products", productRouter);
-
-const AdminRouter = require("./routes/AdminRoute");
-app.use("/Admins", AdminRouter);
-
-// MongoDB connection
-mongoose.connect("mongodb+srv://admin:admin@cluster0.afu07sh.mongodb.net/")
-  .then(() => {
-    console.log(" Connected to MongoDB");
-
-    // Start the server
-    const server = app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-
-    // Handle EADDRINUSE error
-    server.on("error", (err) => {
-      if (err.code === "EADDRINUSE") {
-        console.error(` Port ${PORT} is already in use. Please stop the process using it or change the port.`);
-        process.exit(1);
-      }
-    });
-
-  })
-  .catch((err) => {
-    console.error(" MongoDB connection error:", err);
-  });
-
-  
-
-  app.post("/login", async (req, res) => {
+app.use("/admins", adminRouter);
+ 
+app.post("/login", async (req, res) => {
   const { gmail, password } = req.body;
   try {
     const user = await Admin.findOne({ gmail });
     if (!user) {
-      return res.json({ status: "error", message: "User not found" });
+      return res
+        .status(404)
+        .json({ status: "error", message: "User not found" });
     }
 
     if (user.password === password) {
-      const { password, ...userData } = user._doc;  
+      // remove password before sending response
+      const { password, ...userData } = user._doc;
       return res.json({ status: "ok", user: userData });
     } else {
-      return res.json({ status: "error", message: "Incorrect password" });
+      return res
+        .status(401)
+        .json({ status: "error", message: "Incorrect password" });
     }
-
   } catch (err) {
-    console.error(err);
+    console.error("Login error:", err);
     res.status(500).json({ status: "error", message: "Server error" });
   }
 });
+
+ 
+mongoose
+  .connect("mongodb+srv://admin:admin@cluster0.afu07sh.mongodb.net/", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to MongoDB");
+
+    // Start server
+    const server = app.listen(PORT, () => {
+      console.log(` Server running on http://localhost:${PORT}`);
+    });
+
+     
+    server.on("error", (err) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(
+          ` Port ${PORT} is already in use. Please stop the process using it or change the port.`
+        );
+        process.exit(1);
+      }
+    });
+  })
+  .catch((err) => {
+    console.error(" MongoDB connection error:", err);
+  });

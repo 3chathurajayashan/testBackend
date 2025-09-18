@@ -1,149 +1,136 @@
-const  User = require("../models/userModel");
+const User = require("../models/userModel");
 
-//display method
-const getAllUsers = async (req, res, next) => 
-    {
-
-    let users;
-
-    try
-    {
-        users = await User.find();
+ 
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
     }
-    catch(err)
-    {
-        console.log(err);
-    }
-
-    //if users not found
-    if(!users)
-    {
-        return res.status(404).json({message:"users not found! try again"});
-    }
-
-    //display function
-    return res.status(200).json({ users});
-};
-
-//data insert
-
-const addUsers = async (req, res, next) => {
-
- const {pharmacyName, ownerName, email,password,phone,address,pharmacyLicenseNumber,profileImage,role } = req.body;
-
- let users;
-
- try{
-
-    users = new User ({pharmacyName, ownerName, email,password,phone,address,pharmacyLicenseNumber,profileImage,role });
-    await users.save();
- }
- catch(err)
- {
-    console.log(err);
- }
-
- //if not insert users
- if(!users)
- {
-    return res.status(404).send({message:"unable to add users!"});
- }
- else
- {
-    return res.status(200).json({users});
- }
-
-}
-
-//get by ID
-
-const getByID = async (req, res, next) => {
-
-    const id= req.params.id;
-    let user;
-
-    try{
-        user =await User.findById(id);
-
-    }
-    catch(err)
-    {
-        console.log(err);
-    }
-
-     //if not available users
- if(!user)
- {
-    return res.status(404).send({message:"user can not find!"});
- }
- else
- {
-    return res.status(200).json({user});
- }
-};
-
-//update user data
-
-const updateUser = async (req, res, next) =>{
-
-    const id= req.params.id;
-    const {pharmacyName, ownerName, email,password,phone,address,pharmacyLicenseNumber,profileImage,role } = req.body;
-
-    let users;
-
-    try
-    {
-        users = await User.findByIdAndUpdate(id,{ pharmacyName:pharmacyName, ownerName:ownerName, email:email,password:password,phone:phone,address:address,pharmacyLicenseNumber:pharmacyLicenseNumber,profileImage:profileImage,role:role});
-        users = await users.save();
-    }
-    catch(err)
-    {
-        console.log(err);
-
-    }
-
-    if(!users)
- {
-    return res.status(404).send({message:"unable to update user details"});
- }
- else
- {
-    return res.status(200).json({users});
- }
-};
-
-
-//delete users
-const deleteUsers = async (req, res, next) =>{
-  const id= req.params.id;
-
-  let user;
-
-  try{
-      user =await User.findByIdAndDelete(id);
+    return res.status(200).json({ users });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
   }
-  catch(err)
-  {
-console.log(err);
+};
+
+ 
+const addUsers = async (req, res) => {
+  const {
+    pharmacyName,
+    ownerName,
+    email,
+    password,
+    phone,
+    address,
+    pharmacyLicenseNumber,
+    profileImage,
+    role,
+  } = req.body;
+
+  try {
+    const newUser = new User({
+      pharmacyName,
+      ownerName,
+      email,
+      password,
+      phone,
+      address,
+      pharmacyLicenseNumber,
+      profileImage,
+      role,
+    });
+
+    await newUser.save();
+    return res.status(201).json({ user: newUser });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Unable to add user" });
   }
+};
 
-  
-    if(!user)
- {
-    return res.status(404).send({message:"unable to update user details"});
- }
- else
- {
-    return res.status(200).json({user});
- }
+ 
+const getByID = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const user = await User.findById(id)
+      .populate("cart.product") // show product details inside cart
+      .populate("wishlist"); // show wishlist product details
 
-}
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+    return res.status(200).json({ user });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+ 
+const updateUser = async (req, res) => {
+  const id = req.params.id;
+  const {
+    pharmacyName,
+    ownerName,
+    email,
+    password,
+    phone,
+    address,
+    pharmacyLicenseNumber,
+    profileImage,
+    role,
+  } = req.body;
+
+  try {
+    let user = await User.findByIdAndUpdate(
+      id,
+      {
+        pharmacyName,
+        ownerName,
+        email,
+        password,
+        phone,
+        address,
+        pharmacyLicenseNumber,
+        profileImage,
+        role,
+      },
+      { new: true }  
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Unable to update user" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
 
+const deleteUsers = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const user = await User.findByIdAndDelete(id);
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-exports.deleteUsers = deleteUsers;
-exports.updateUser = updateUser;
-exports.getByID = getByID;
-exports.addUsers = addUsers;
-exports.getAllUsers = getAllUsers;
+    return res.status(200).json({ message: "User deleted", user });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = {
+  getAllUsers,
+  addUsers,
+  getByID,
+  updateUser,
+  deleteUsers,
+};
