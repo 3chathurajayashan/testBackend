@@ -1,149 +1,106 @@
-
 const Admin = require("../models/AdminModel");
+const bcrypt = require("bcrypt");
 
-//display admins
-const getAllAdmins = async(req, res, next)=>{
-
-let admins;
-
-try{
-
-    admins = await Admin.find();
-
-}
-catch(err)
-{
-    console.log(err);
-}
-
-if(!admins)
-{
-    return res.status(404).json({message:"Admins are not found at the moment!"});
-}
+// Display all admins (optionally filter by role)
+const getAllAdmins = async (req, res, next) => {
+    const { role } = req.query; // optional query param
+    try {
+        const filter = role ? { role } : {};
+        const admins = await Admin.find(filter);
+        if (!admins || admins.length === 0) {
+            return res.status(404).json({ message: "No admins found!" });
+        }
+        return res.status(200).json({ admins });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
 
 
-return res.status(200).json({ admins});
-
-}
-
-//admins insert
- 
-
-const addAdmins = async (req, res, next) => {
-  const { name, gmail, mobile, password, homeTown } = req.body;
+const addAdmins = async (req, res) => {
+  const { name, gmail, mobile, password, homeTown, role } = req.body;
 
   try {
-    
+    // check existing gmail
     const existingAdmin = await Admin.findOne({ gmail });
     if (existingAdmin) {
-      return res.status(400).json({ message: "Gmail already exists, use another!" });
+      return res.status(400).json({ message: "Gmail already exists!" });
     }
 
-    // create new admin
-    const admin = new Admin({
-      name,
-      gmail,
-      mobile,
-      password,
-      homeTown,
-    });
-
+    // create admin
+    const admin = new Admin({ name, gmail, mobile, password, homeTown, role });
     await admin.save();
-    return res.status(201).json({ admin });
 
+    res.status(201).json({ admin });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
- 
-//get by ID
 
+// Get admin by ID
 const getByID = async (req, res, next) => {
-
-    const id= req.params.id;
-    let admin;
-
-    try{
-        admin =await Admin.findById(id);
-
+    const id = req.params.id;
+    try {
+        const admin = await Admin.findById(id);
+        if (!admin) {
+            return res.status(404).json({ message: "Admin not found!" });
+        }
+        return res.status(200).json({ admin });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Server error" });
     }
-    catch(err)
-    {
-        console.log(err);
-    }
-
-     //if not available users
- if(!admin)
- {
-    return res.status(404).send({message:"Admin can not find!"});
- }
- else
- {
-    return res.status(200).json({admin});
- }
 };
 
-//update Admin data
+// Update admin
+const updateAdmin = async (req, res, next) => {
+    const id = req.params.id;
+    const { name, gmail, mobile, password, homeTown, role } = req.body;
 
-const updateAdmin = async (req, res, next) =>{
-
-    const id= req.params.id;
-    const {name, gmail, mobile, password, homeTown  } = req.body;
-
-    let admins;
-
-    try
-    {
-        admins = await Admin.findByIdAndUpdate(id,{ name, gmail, mobile, password, homeTown});
-        admins = await admins.save();
-    }
-    catch(err)
-    {
-        console.log(err);
-
+    if (role && !["admin", "inventory", "sales"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role!" });
     }
 
-    if(!admins)
- {
-    return res.status(404).send({message:"unable to update admin details"});
- }
- else
- {
-    return res.status(200).json({admins});
- }
+    try {
+        const updateData = { name, gmail, mobile, homeTown, role };
+
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(password, salt);
+        }
+
+        const admin = await Admin.findByIdAndUpdate(id, updateData, { new: true });
+        if (!admin) {
+            return res.status(404).json({ message: "Unable to update admin details" });
+        }
+        return res.status(200).json({ admin });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Server error" });
+    }
 };
 
+// Delete admin
+const deleteAdmins = async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const admin = await Admin.findByIdAndDelete(id);
+        if (!admin) {
+            return res.status(404).json({ message: "Unable to delete admin" });
+        }
+        return res.status(200).json({ admin });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
 
-//DELETE ADMIN
-const deleteAdmins = async (req, res, next) =>{
-  const id= req.params.id;
-
-  let admin;
-
-  try{
-      admin =await Admin.findByIdAndDelete(id);
-  }
-  catch(err)
-  {
-console.log(err);
-  }
-
-  
-    if(!admin)
- {
-    return res.status(404).send({message:"unable to delete admin"});
- }
- else
- {
-    return res.status(200).json({admin});
- }
-
-}
-
-
-exports.deleteAdmins = deleteAdmins;
-exports.updateAdmin = updateAdmin;
-exports.getByID = getByID;
-exports.addAdmins = addAdmins;
-exports.getAllAdmins = getAllAdmins;
+module.exports = {
+    getAllAdmins,
+    addAdmins,
+    getByID,
+    updateAdmin,
+    deleteAdmins
+};
