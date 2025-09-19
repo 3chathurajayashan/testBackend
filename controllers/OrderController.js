@@ -1,24 +1,32 @@
 const Order = require("../models/OrderModel");
 
-// Create a new order
+const mongoose = require("mongoose");
+ 
+
 exports.createOrder = async (req, res) => {
   try {
     const { user, products, totalAmount, paymentMethod, shippingAddress } = req.body;
 
-    const newOrder = new Order({
-      user,
-      products,
+    const order = new Order({
+      user: new mongoose.Types.ObjectId(user), // ✅ use 'new'
+      products: products.map((p) => ({
+        product: new mongoose.Types.ObjectId(p.product), // ✅ use 'new'
+        quantity: p.quantity,
+        priceAtPurchase: p.priceAtPurchase,
+      })),
       totalAmount,
       paymentMethod,
       shippingAddress,
     });
 
-    const savedOrder = await newOrder.save();
+    const savedOrder = await order.save();
     res.status(201).json({ status: "success", data: savedOrder });
   } catch (error) {
+    console.error("Order creation error:", error);
     res.status(500).json({ status: "error", message: error.message });
   }
 };
+
 
 // Get all orders (admin)
 exports.getAllOrders = async (req, res) => {

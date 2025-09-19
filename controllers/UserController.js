@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose"); 
 const router = express.Router();
 const User = require("../models/userModel");
 const cartController = require("../controllers/CartControllers");
@@ -37,17 +38,24 @@ const addUsers = async (req, res) => {
 
 const getByID = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id)
-      .populate("cart.product")
-      .populate("wishlist");
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(id).populate("cart.product"); // remove wishlist if not present
 
     if (!user) return res.status(404).json({ message: "User not found!" });
     return res.status(200).json({ user });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Server error" });
+    console.error("getByID error:", err);
+    return res.status(500).json({ message: err.message });
   }
 };
+
+
 
 const updateUser = async (req, res) => {
   try {

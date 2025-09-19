@@ -18,10 +18,13 @@ const adminRouter = require("./routes/AdminRoute");
 
 const cartRouter = require("./routes/cartRoutes");
 
+const orderRouter = require("./routes/OrderRoute");
+
 app.use("/users", userRouter);     // includes cart + wishlist routes
 app.use("/products", productRouter);
 app.use("/admins", adminRouter);
 app.use("/cart", cartRouter);
+app.use("/api/orders", orderRouter);
 // Test route
 app.get("/", (req, res) => {
   res.send("Backend is working");

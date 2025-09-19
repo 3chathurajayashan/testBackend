@@ -59,3 +59,27 @@ exports.removeFromCart = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+exports.clearCart = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log("Clear cart userId:", userId); // 🔹 log userId
+
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log("User not found");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log("Cart before clearing:", user.cart);
+    user.cart = []; // clear cart
+    await user.save();
+    console.log("Cart cleared");
+
+    res.status(200).json({ message: "Cart cleared", cart: user.cart });
+  } catch (err) {
+    console.error("Clear cart error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
